@@ -53,6 +53,7 @@ pub(crate) struct Voice {
     cutoff: f32,
     resonance: f32,
 
+    tuning_to_pitch: f32,
     vib_lfo_to_pitch: f32,
     mod_lfo_to_pitch: f32,
     mod_env_to_pitch: f32,
@@ -104,6 +105,7 @@ impl Voice {
             note_gain: 0_f32,
             cutoff: 0_f32,
             resonance: 0_f32,
+            tuning_to_pitch: 0_f32,
             vib_lfo_to_pitch: 0_f32,
             mod_lfo_to_pitch: 0_f32,
             mod_env_to_pitch: 0_f32,
@@ -120,6 +122,10 @@ impl Voice {
             voice_length: 0,
             min_voice_length: (settings.sample_rate / 500) as usize,
         }
+    }
+
+    pub(crate) fn tune(&mut self, tuning: f32) {
+        self.tuning_to_pitch = tuning;
     }
 
     pub(crate) fn start(&mut self, region: &RegionPair, channel: i32, key: i32, velocity: i32) {
@@ -200,12 +206,20 @@ impl Voice {
         self.vib_lfo.process();
         self.mod_lfo.process();
 
+        // You can set vibratto in soundfonts (part of the standard).
         let vib_pitch_change = (0.01_f32 * channel_info.get_modulation() + self.vib_lfo_to_pitch)
             * self.vib_lfo.get_value();
+        // This is also part of the soundfont standard.
         let mod_pitch_change = self.mod_lfo_to_pitch * self.mod_lfo.get_value()
             + self.mod_env_to_pitch * self.mod_env.get_value();
+        // This comes from MIDI input.
         let channel_pitch_change = channel_info.get_tune() + channel_info.get_pitch_bend();
-        let pitch = self.key as f32 + vib_pitch_change + mod_pitch_change + channel_pitch_change;
+        // Output pitch.
+        let pitch = self.key as f32
+            + vib_pitch_change
+            + mod_pitch_change
+            + channel_pitch_change
+            + self.tuning_to_pitch;
         if !self.oscillator.process(data, &mut self.block[..], pitch) {
             return false;
         }

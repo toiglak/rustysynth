@@ -169,6 +169,23 @@ impl Synthesizer {
         }
     }
 
+    /// Adjusts the pitch of a note.
+    ///
+    /// The `tuning` parameter increases the pitch by one semitone for a value of 1.0, two semitones
+    /// for 2.0, and decreases it by one semitone for -1.0, and so on. Fractional values can be used
+    /// for microtuning.
+    pub fn note_tune(&mut self, channel: i32, key: i32, tuning: f32) {
+        if !(0 <= channel && channel < self.channels.len() as i32) {
+            return;
+        }
+
+        for voice in self.voices.get_active_voices().iter_mut() {
+            if voice.channel == channel && voice.key == key {
+                voice.tune(tuning);
+            }
+        }
+    }
+
     /// Stops a note.
     ///
     /// # Arguments
@@ -236,8 +253,8 @@ impl Synthesizer {
                     if instrument_region.contains(key, velocity) {
                         let region_pair = RegionPair::new(preset_region, instrument_region);
 
-                        if let Some(value) = self.voices.request_new(instrument_region, channel) {
-                            value.start(&region_pair, channel, key, velocity)
+                        if let Some(voice) = self.voices.request_new(instrument_region, channel) {
+                            voice.start(&region_pair, channel, key, velocity)
                         }
                     }
                 }

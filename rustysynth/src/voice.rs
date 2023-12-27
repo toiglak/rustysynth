@@ -302,6 +302,7 @@ impl Voice {
             self.oscillator.release();
 
             self.voice_state = VoiceState::RELEASED;
+            self.tuning_to_pitch = 0_f32;
         }
     }
 

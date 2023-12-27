@@ -186,6 +186,17 @@ impl Synthesizer {
         }
     }
 
+    /// Sets the bank number for the specified channel.
+    pub fn set_patch(&mut self, channel: i32, patch: i32) {
+        if !(0 <= channel && channel < self.channels.len() as i32) {
+            return;
+        }
+
+        let channel_info = &mut self.channels[channel as usize];
+
+        channel_info.set_patch(patch);
+    }
+
     /// Stops a note.
     ///
     /// # Arguments

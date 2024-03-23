@@ -131,7 +131,7 @@ impl Synthesizer {
     /// * `data1` - The first data part of the message.
     /// * `data2` - The second data part of the message.
     pub fn process_midi_message(&mut self, channel: i32, command: i32, data1: i32, data2: i32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -175,7 +175,7 @@ impl Synthesizer {
     /// for 2.0, and decreases it by one semitone for -1.0, and so on. Fractional values can be used
     /// for microtuning.
     pub fn note_tune(&mut self, channel: i32, key: i32, tuning: f32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -188,7 +188,7 @@ impl Synthesizer {
 
     /// Sets the bank number for the specified channel.
     pub fn set_bank(&mut self, channel: i32, bank: i32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -199,7 +199,7 @@ impl Synthesizer {
 
     /// Sets the patch number for the specified channel.
     pub fn set_patch(&mut self, channel: i32, patch: i32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -215,7 +215,7 @@ impl Synthesizer {
     /// * `channel` - The channel of the note.
     /// * `key` - The key of the note.
     pub fn note_off(&mut self, channel: i32, key: i32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -239,7 +239,7 @@ impl Synthesizer {
             return;
         }
 
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 
@@ -334,7 +334,7 @@ impl Synthesizer {
     ///
     /// * `channel` - The channel to be reset.
     pub fn reset_all_controllers_channel(&mut self, channel: i32) {
-        if !(0 <= channel && channel < self.channels.len() as i32) {
+        if channel < 0 || channel >= self.channels.len() as i32 {
             return;
         }
 

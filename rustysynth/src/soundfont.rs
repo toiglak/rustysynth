@@ -228,7 +228,7 @@ pub mod export {
                         .map(|r| crate::PresetRegion {
                             gs: {
                                 let mut gs = [0; GeneratorType::COUNT];
-                                for (i, v) in preset.preset.regions[0].gs.iter().enumerate() {
+                                for (i, v) in r.gs.iter().enumerate() {
                                     gs[i] = *v;
                                 }
                                 gs
@@ -248,7 +248,7 @@ pub mod export {
                             .map(|r| crate::InstrumentRegion {
                                 gs: {
                                     let mut gs = [0; GeneratorType::COUNT];
-                                    for (i, v) in preset.preset.regions[0].gs.iter().enumerate() {
+                                    for (i, v) in r.gs.iter().enumerate() {
                                         gs[i] = *v;
                                     }
                                     gs

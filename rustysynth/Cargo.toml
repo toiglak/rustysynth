@@ -13,3 +13,7 @@ keywords = ["soundfont", "midi", "synthesizer", "audio", "music"]
 categories = ["multimedia::audio"]
 
 [dependencies]
+serde = { version = "^1.0", features = ["derive"], optional = true }
+
+[features]
+export = ["dep:serde"]

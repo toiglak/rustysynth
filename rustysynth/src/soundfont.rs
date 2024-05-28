@@ -91,6 +91,21 @@ impl SoundFont {
     }
 }
 
+/// Notes:
+///
+/// - This works, but I wonder if we couldn't just use the original structures + maybe
+///   something like `#[cfg_attr(feature = "export", derive(Serialize, Deserialize))]`.
+///     - Computing preset hash could still be done without the access to the private
+///       fields, through getters.
+///     - The only problem is figuring out how to de/serialize `gs` which has `[i16; 61]`
+///       type.
+/// - Honestly, a bigger issue is "distilling" soundfont to a single preset. Doing so is
+///   quite complex, as we need to keep track of all the instruments and samples that are
+///   used by the preset, then filter out and remap indexes to the remaining instruments
+///   and regions.
+///     - In the end, the distillation may not be that hard. It would be hard right now,
+///       because of all the noise coming from the duplicated structures. Like, I think
+///       this problem isn't something that a few hashmaps couldn't solve.
 #[cfg(feature = "export")]
 pub mod export {
     use std::sync::Arc;
@@ -127,7 +142,7 @@ pub mod export {
                     tools: self.info.tools.clone(),
                 },
                 bits_per_sample: self.bits_per_sample,
-                wave_data: (*self.wave_data).clone(), // HERE
+                wave_data: (*self.wave_data).clone(),
                 preset: Preset {
                     name: preset.name.clone(),
                     patch_number: preset.patch_number,

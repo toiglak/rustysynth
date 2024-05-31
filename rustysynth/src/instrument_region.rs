@@ -160,6 +160,18 @@ impl InstrumentRegion {
         self.sample_end_loop + self.get_end_loop_address_offset()
     }
 
+    pub fn get_sample_sample_rate(&self) -> i32 {
+        self.sample_sample_rate
+    }
+
+    pub fn get_sample_original_pitch(&self) -> i32 {
+        self.sample_original_pitch
+    }
+
+    pub fn get_sample_pitch_correction(&self) -> i32 {
+        self.sample_pitch_correction
+    }
+
     pub fn get_start_address_offset(&self) -> i32 {
         32768 * self.gs[GeneratorType::START_ADDRESS_COARSE_OFFSET as usize] as i32
             + self.gs[GeneratorType::START_ADDRESS_OFFSET as usize] as i32

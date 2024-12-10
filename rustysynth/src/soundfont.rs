@@ -50,7 +50,7 @@ impl SoundFont {
         let sample_data = SoundFontSampleData::new(reader)?;
         let parameters = SoundFontParameters::new(reader)?;
 
-        let sound_font = Self {
+        let mut sound_font = Self {
             info,
             bits_per_sample: 16,
             wave_data: Arc::new(sample_data.wave_data),
@@ -59,22 +59,9 @@ impl SoundFont {
             instruments: parameters.instruments,
         };
 
-        sound_font.sanity_check()?;
+        sound_font.sanitize()?;
 
         Ok(sound_font)
-    }
-
-    fn sanity_check(&self) -> Result<(), SoundFontError> {
-        // https://github.com/sinshu/rustysynth/issues/22
-        for instrument in self.instruments.iter() {
-            for region in instrument.regions.iter() {
-                if region.get_sample_end_loop() < region.get_sample_start_loop() {
-                    return Err(SoundFontError::SanityCheckFailed);
-                }
-            }
-        }
-
-        Ok(())
     }
 
     /// Gets the information of the SoundFont.
@@ -105,5 +92,32 @@ impl SoundFont {
     /// Gets the instruments of the SoundFont.
     pub fn get_instruments(&self) -> &[Instrument] {
         &self.instruments[..]
+    }
+
+    fn sanitize(&mut self) -> Result<(), SoundFontError> {
+        for instrument in self.instruments.iter_mut() {
+            for region in instrument.regions.iter_mut() {
+                // https://github.com/sinshu/rustysynth/issues/22
+                //
+                // if region.get_sample_end_loop() < region.get_sample_start_loop() {
+                //     return Err(SoundFontError::SanityCheckFailed);
+                // }
+                //
+                // NOTE: I have found instruments which have hit the above condition, however
+                // they played just fine. For that reason, I decided to change the condition
+                // to only check if the values are negative, which would result in usize
+                // underflow. In such cases, the instrument simply won't play.
+
+                if region.sample_start_loop < 0 {
+                    region.sample_start_loop = 0;
+                }
+
+                if region.sample_end_loop < 0 {
+                    region.sample_end_loop = 0;
+                }
+            }
+        }
+
+        Ok(())
     }
 }

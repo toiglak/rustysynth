@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 
 #[non_exhaustive]
 pub(crate) struct ZoneInfo {
@@ -12,7 +12,7 @@ pub(crate) struct ZoneInfo {
 }
 
 impl ZoneInfo {
-    fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let generator_index = BinaryReader::read_u16(reader)? as i32;
         let modulator_index = BinaryReader::read_u16(reader)? as i32;
 
@@ -27,9 +27,9 @@ impl ZoneInfo {
     pub(crate) fn read_from_chunk<R: Read>(
         reader: &mut R,
         size: usize,
-    ) -> Result<Vec<ZoneInfo>, SoundFontError> {
+    ) -> Result<Vec<ZoneInfo>, ParseError> {
         if size % 4 != 0 {
-            return Err(SoundFontError::InvalidZoneList);
+            return Err(ParseError::InvalidZoneList);
         }
 
         let count = size / 4;

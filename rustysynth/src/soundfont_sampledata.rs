@@ -4,7 +4,7 @@ use std::io::Read;
 use std::slice;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::four_cc::FourCC;
 use crate::read_counter::ReadCounter;
 
@@ -15,10 +15,10 @@ pub struct SoundFontSampleData {
 }
 
 impl SoundFontSampleData {
-    pub(crate) fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    pub(crate) fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let chunk_id = BinaryReader::read_four_cc(reader)?;
         if chunk_id != b"LIST" {
-            return Err(SoundFontError::ListChunkNotFound);
+            return Err(ParseError::ListChunkNotFound);
         }
 
         let end = BinaryReader::read_u32(reader)? as usize;
@@ -26,7 +26,7 @@ impl SoundFontSampleData {
 
         let list_type = BinaryReader::read_four_cc(reader)?;
         if list_type != b"sdta" {
-            return Err(SoundFontError::InvalidListChunkType {
+            return Err(ParseError::InvalidListChunkType {
                 expected: FourCC::from_bytes(*b"sdta"),
                 actual: list_type,
             });
@@ -41,19 +41,19 @@ impl SoundFontSampleData {
             match id.as_bytes() {
                 b"smpl" => wave_data = Some(BinaryReader::read_wave_data(reader, size)?),
                 b"sm24" => BinaryReader::discard_data(reader, size)?,
-                _ => return Err(SoundFontError::ListContainsUnknownId(id)),
+                _ => return Err(ParseError::ListContainsUnknownId(id)),
             }
         }
 
         let wave_data = match wave_data {
             Some(value) => value,
-            None => return Err(SoundFontError::SampleDataNotFound),
+            None => return Err(ParseError::SampleDataNotFound),
         };
 
         let ptr = wave_data.as_ptr() as *const u8;
         let four_cc = unsafe { slice::from_raw_parts(ptr, 4) };
         if four_cc == b"OggS" {
-            return Err(SoundFontError::UnsupportedSampleFormat);
+            return Err(ParseError::UnsupportedSampleFormat);
         }
 
         Ok(Self {

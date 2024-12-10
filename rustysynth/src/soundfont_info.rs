@@ -3,7 +3,7 @@
 use std::io::Read;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::four_cc::FourCC;
 use crate::read_counter::ReadCounter;
 use crate::soundfont_version::SoundFontVersion;
@@ -25,10 +25,10 @@ pub struct SoundFontInfo {
 }
 
 impl SoundFontInfo {
-    pub(crate) fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    pub(crate) fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let chunk_id = BinaryReader::read_four_cc(reader)?;
         if chunk_id != b"LIST" {
-            return Err(SoundFontError::ListChunkNotFound);
+            return Err(ParseError::ListChunkNotFound);
         }
 
         let end = BinaryReader::read_u32(reader)? as usize;
@@ -36,7 +36,7 @@ impl SoundFontInfo {
 
         let list_type = BinaryReader::read_four_cc(reader)?;
         if list_type != b"INFO" {
-            return Err(SoundFontError::InvalidListChunkType {
+            return Err(ParseError::InvalidListChunkType {
                 expected: FourCC::from_bytes(*b"INFO"),
                 actual: list_type,
             });
@@ -77,7 +77,7 @@ impl SoundFontInfo {
                 b"ICOP" => copyright = Some(BinaryReader::read_fixed_length_string(reader, size)?),
                 b"ICMT" => comments = Some(BinaryReader::read_fixed_length_string(reader, size)?),
                 b"ISFT" => tools = Some(BinaryReader::read_fixed_length_string(reader, size)?),
-                _ => return Err(SoundFontError::ListContainsUnknownId(id)),
+                _ => return Err(ParseError::ListContainsUnknownId(id)),
             }
         }
 

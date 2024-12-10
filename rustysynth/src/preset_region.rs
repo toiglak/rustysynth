@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::generator::Generator;
 use crate::generator_type::GeneratorType;
 use crate::instrument::Instrument;
@@ -30,7 +30,7 @@ impl PresetRegion {
         global: &Zone,
         local: &Zone,
         samples: &[Instrument],
-    ) -> Result<Self, SoundFontError> {
+    ) -> Result<Self, ParseError> {
         let mut gs: [i16; GeneratorType::COUNT] = [0; GeneratorType::COUNT];
         gs[GeneratorType::KEY_RANGE as usize] = 0x7F00;
         gs[GeneratorType::VELOCITY_RANGE as usize] = 0x7F00;
@@ -45,7 +45,7 @@ impl PresetRegion {
 
         let instrument_id = gs[GeneratorType::INSTRUMENT as usize] as usize;
         if instrument_id >= samples.len() {
-            return Err(SoundFontError::InvalidInstrumentId {
+            return Err(ParseError::InvalidInstrumentId {
                 preset_id,
                 instrument_id,
             });
@@ -61,7 +61,7 @@ impl PresetRegion {
         preset_id: usize,
         zones: &[Zone],
         instruments: &[Instrument],
-    ) -> Result<Vec<PresetRegion>, SoundFontError> {
+    ) -> Result<Vec<PresetRegion>, ParseError> {
         // Is the first one the global zone?
         if zones[0].generators.is_empty()
             || zones[0].generators.last().unwrap().generator_type != GeneratorType::INSTRUMENT

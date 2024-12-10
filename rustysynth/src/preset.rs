@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::instrument::Instrument;
 use crate::preset_info::PresetInfo;
 use crate::preset_region::PresetRegion;
@@ -24,12 +24,12 @@ impl Preset {
         preset_id: usize,
         zones: &[Zone],
         instruments: &[Instrument],
-    ) -> Result<Self, SoundFontError> {
+    ) -> Result<Self, ParseError> {
         let name = info.name.clone();
 
         let zone_count = info.zone_end_index - info.zone_start_index + 1;
         if zone_count <= 0 {
-            return Err(SoundFontError::InvalidPreset(preset_id));
+            return Err(ParseError::InvalidPreset(preset_id));
         }
 
         let span_start = info.zone_start_index as usize;
@@ -52,9 +52,9 @@ impl Preset {
         infos: &[PresetInfo],
         zones: &[Zone],
         instruments: &[Instrument],
-    ) -> Result<Vec<Preset>, SoundFontError> {
+    ) -> Result<Vec<Preset>, ParseError> {
         if infos.len() <= 1 {
-            return Err(SoundFontError::PresetNotFound);
+            return Err(ParseError::PresetNotFound);
         }
 
         // The last one is the terminator.

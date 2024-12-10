@@ -1,198 +1,93 @@
-use std::error;
-use std::fmt;
 use std::io;
+
+use thiserror::Error;
 
 use crate::four_cc::FourCC;
 
 /// Represents an error when initializing a synthesizer.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum SynthesizerError {
+    #[error("the sample rate must be between 16000 and 192000, but was {0}")]
     SampleRateOutOfRange(i32),
+    #[error("the block size must be between 8 and 1024, but was {0}")]
     BlockSizeOutOfRange(usize),
+    #[error("the maximum number of polyphony must be between 8 and 256, but was {0}")]
     MaximumPolyphonyOutOfRange(usize),
 }
 
-impl error::Error for SynthesizerError {}
-
-impl fmt::Display for SynthesizerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SynthesizerError::SampleRateOutOfRange(value) => write!(
-                f,
-                "the sample rate must be between 16000 and 192000, but was {}",
-                value
-            ),
-            SynthesizerError::BlockSizeOutOfRange(value) => write!(
-                f,
-                "the block size must be between 8 and 1024, but was {}",
-                value
-            ),
-            SynthesizerError::MaximumPolyphonyOutOfRange(value) => {
-                write!(
-                    f,
-                    "the maximum number of polyphony must be between 8 and 256, but was {}",
-                    value
-                )
-            }
-        }
-    }
-}
-
 /// Represents an error when loading a SoundFont.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum SoundFontError {
-    IoError(io::Error),
+pub enum ParseError {
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+    #[error("the RIFF chunk was not found")]
     RiffChunkNotFound,
-    InvalidRiffChunkType {
-        expected: FourCC,
-        actual: FourCC,
-    },
+    #[error("the type of the RIFF chunk must be '{expected}', but was '{actual}'")]
+    InvalidRiffChunkType { expected: FourCC, actual: FourCC },
+    #[error("the LIST chunk was not found")]
     ListChunkNotFound,
-    InvalidListChunkType {
-        expected: FourCC,
-        actual: FourCC,
-    },
+    #[error("the type of the LIST chunk must be '{expected}', but was '{actual}'")]
+    InvalidListChunkType { expected: FourCC, actual: FourCC },
+    #[error("the INFO list contains an unknown ID '{0}'")]
     ListContainsUnknownId(FourCC),
+    #[error("no valid sample data was found")]
     SampleDataNotFound,
+    #[error("SoundFont3 is not yet supported")]
     UnsupportedSampleFormat,
+    #[error("the '{0}' sub-chunk was not found")]
     SubChunkNotFound(FourCC),
+    #[error("the preset list is invalid")]
     InvalidPresetList,
+    #[error(
+        "the preset with the ID '{preset_id}' contains an invalid instrument ID '{instrument_id}'"
+    )]
     InvalidInstrumentId {
         preset_id: usize,
         instrument_id: usize,
     },
+    #[error("the preset with the ID '{0}' has no zone")]
     InvalidPreset(usize),
+    #[error("no valid preset was found")]
     PresetNotFound,
+    #[error("the instrument list is invalid")]
     InvalidInstrumentList,
+    #[error(
+        "the instrument with the ID '{instrument_id}' contains an invalid sample ID '{sample_id}'"
+    )]
     InvalidSampleId {
         instrument_id: usize,
         sample_id: usize,
     },
+    #[error("the instrument with the ID '{0}' has no zone")]
     InvalidInstrument(usize),
+    #[error("no valid instrument was found")]
     InstrumentNotFound,
+    #[error("the sample header list is invalid")]
     InvalidSampleHeaderList,
+    #[error("the zone list is invalid")]
     InvalidZoneList,
+    #[error("no valid zone was found")]
     ZoneNotFound,
+    #[error("the generator list is invalid")]
     InvalidGeneratorList,
+    #[error("sanity check failed")]
     SanityCheckFailed,
 }
 
-impl error::Error for SoundFontError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            SoundFontError::IoError(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for SoundFontError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SoundFontError::IoError(err) => err.fmt(f),
-            SoundFontError::RiffChunkNotFound => write!(f, "the RIFF chunk was not found"),
-            SoundFontError::InvalidRiffChunkType { expected, actual } => write!(
-                f,
-                "the type of the RIFF chunk must be '{}', but was '{}'",
-                expected, actual
-            ),
-            SoundFontError::ListChunkNotFound => write!(f, "the LIST chunk was not found"),
-            SoundFontError::InvalidListChunkType { expected, actual } => write!(
-                f,
-                "the type of the LIST chunk must be '{}', but was '{}'",
-                expected, actual
-            ),
-            SoundFontError::ListContainsUnknownId(id) => {
-                write!(f, "the INFO list contains an unknown ID '{id}'")
-            }
-            SoundFontError::SampleDataNotFound => write!(f, "no valid sample data was found"),
-            SoundFontError::UnsupportedSampleFormat => write!(f, "SoundFont3 is not yet supported"),
-            SoundFontError::SubChunkNotFound(id) => {
-                write!(f, "the '{}' sub-chunk was not found", id)
-            }
-            SoundFontError::InvalidPresetList => write!(f, "the preset list is invalid"),
-            SoundFontError::InvalidInstrumentId {
-                preset_id,
-                instrument_id,
-            } => write!(
-                f,
-                "the preset with the ID '{preset_id}' contains an invalid instrument ID '{instrument_id}'"
-            ),
-            SoundFontError::InvalidPreset(preset_id) => {
-                write!(f, "the preset with the ID '{preset_id}' has no zone")
-            }
-            SoundFontError::PresetNotFound => write!(f, "no valid preset was found"),
-            SoundFontError::InvalidInstrumentList => write!(f, "the instrument list is invalid"),
-            SoundFontError::InvalidSampleId {
-                instrument_id,
-                sample_id,
-            } => write!(
-                f,
-                "the instrument with the ID '{instrument_id}' contains an invalid sample ID '{sample_id}'"
-            ),
-            SoundFontError::InvalidInstrument(instrument_id) => {
-                write!(f, "the instrument with the ID '{instrument_id}' has no zone")
-            }
-            SoundFontError::InstrumentNotFound => write!(f, "no valid instrument was found"),
-            SoundFontError::InvalidSampleHeaderList => {
-                write!(f, "the sample header list is invalid")
-            }
-            SoundFontError::InvalidZoneList => write!(f, "the zone list is invalid"),
-            SoundFontError::ZoneNotFound => write!(f, "no valid zone was found"),
-            SoundFontError::InvalidGeneratorList => write!(f, "the generator list is invalid"),
-            SoundFontError::SanityCheckFailed => write!(f, "sanity check failed"),
-        }
-    }
-}
-
-impl From<io::Error> for SoundFontError {
-    fn from(err: io::Error) -> Self {
-        SoundFontError::IoError(err)
-    }
-}
-
 /// Represents an error when loading a MIDI file.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum MidiFileError {
-    IoError(io::Error),
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+    #[error("the chunk type must be '{expected}', but was '{actual}'")]
     InvalidChunkType { expected: FourCC, actual: FourCC },
+    #[error("the '{0}' chunk has invalid data")]
     InvalidChunkData(FourCC),
+    #[error("the format {0} is not supported")]
     UnsupportedFormat(i16),
+    #[error("failed to read the tempo value")]
     InvalidTempoValue,
-}
-
-impl error::Error for MidiFileError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            MidiFileError::IoError(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for MidiFileError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            MidiFileError::IoError(err) => err.fmt(f),
-            MidiFileError::InvalidChunkType { expected, actual } => write!(
-                f,
-                "the chunk type must be '{}', but was '{}'",
-                expected, actual
-            ),
-            MidiFileError::InvalidChunkData(id) => write!(f, "the '{}' chunk has invalid data", id),
-            MidiFileError::UnsupportedFormat(format) => {
-                write!(f, "the format {} is not supported", format)
-            }
-            MidiFileError::InvalidTempoValue => write!(f, "failed to read the tempo value"),
-        }
-    }
-}
-
-impl From<io::Error> for MidiFileError {
-    fn from(err: io::Error) -> Self {
-        MidiFileError::IoError(err)
-    }
 }

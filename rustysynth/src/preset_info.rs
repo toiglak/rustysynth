@@ -3,7 +3,7 @@
 use std::io::Read;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 
 #[non_exhaustive]
 pub(crate) struct PresetInfo {
@@ -18,7 +18,7 @@ pub(crate) struct PresetInfo {
 }
 
 impl PresetInfo {
-    fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let name = BinaryReader::read_fixed_length_string(reader, 20)?;
         let patch_number = BinaryReader::read_u16(reader)? as i32;
         let bank_number = BinaryReader::read_u16(reader)? as i32;
@@ -42,9 +42,9 @@ impl PresetInfo {
     pub(crate) fn read_from_chunk<R: Read>(
         reader: &mut R,
         size: usize,
-    ) -> Result<Vec<PresetInfo>, SoundFontError> {
+    ) -> Result<Vec<PresetInfo>, ParseError> {
         if size % 38 != 0 {
-            return Err(SoundFontError::InvalidPresetList);
+            return Err(ParseError::InvalidPresetList);
         }
 
         let count = size / 38;

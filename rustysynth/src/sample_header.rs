@@ -3,7 +3,7 @@
 use std::io::Read;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 
 /// Represents a sample in the SoundFont.
 #[non_exhaustive]
@@ -21,7 +21,7 @@ pub struct SampleHeader {
 }
 
 impl SampleHeader {
-    fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let name = BinaryReader::read_fixed_length_string(reader, 20)?;
         let start = BinaryReader::read_i32(reader)?;
         let end = BinaryReader::read_i32(reader)?;
@@ -50,9 +50,9 @@ impl SampleHeader {
     pub(crate) fn read_from_chunk<R: Read>(
         reader: &mut R,
         size: usize,
-    ) -> Result<Vec<SampleHeader>, SoundFontError> {
+    ) -> Result<Vec<SampleHeader>, ParseError> {
         if size % 46 != 0 {
-            return Err(SoundFontError::InvalidSampleHeaderList);
+            return Err(ParseError::InvalidSampleHeaderList);
         }
 
         let count = size / 46 - 1;

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::instrument_info::InstrumentInfo;
 use crate::instrument_region::InstrumentRegion;
 use crate::sample_header::SampleHeader;
@@ -19,12 +19,12 @@ impl Instrument {
         instrument_id: usize,
         zones: &[Zone],
         samples: &[SampleHeader],
-    ) -> Result<Self, SoundFontError> {
+    ) -> Result<Self, ParseError> {
         let name = info.name.clone();
 
         let zone_count = info.zone_end_index - info.zone_start_index + 1;
         if zone_count <= 0 {
-            return Err(SoundFontError::InvalidInstrument(instrument_id));
+            return Err(ParseError::InvalidInstrument(instrument_id));
         }
 
         let span_start = info.zone_start_index as usize;
@@ -39,9 +39,9 @@ impl Instrument {
         infos: &[InstrumentInfo],
         zones: &[Zone],
         samples: &[SampleHeader],
-    ) -> Result<Vec<Instrument>, SoundFontError> {
+    ) -> Result<Vec<Instrument>, ParseError> {
         if infos.len() <= 1 {
-            return Err(SoundFontError::InstrumentNotFound);
+            return Err(ParseError::InstrumentNotFound);
         }
 
         // The last one is the terminator.

@@ -13,3 +13,4 @@ keywords = ["soundfont", "midi", "synthesizer", "audio", "music"]
 categories = ["multimedia::audio"]
 
 [dependencies]
+thiserror = "2.0.6"

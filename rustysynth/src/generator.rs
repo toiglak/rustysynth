@@ -2,7 +2,7 @@
 
 use std::io::Read;
 
-use crate::{binary_reader::BinaryReader, error::SoundFontError};
+use crate::{binary_reader::BinaryReader, error::ParseError};
 
 #[derive(Clone, Copy)]
 #[non_exhaustive]
@@ -12,7 +12,7 @@ pub(crate) struct Generator {
 }
 
 impl Generator {
-    fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let generator_type = BinaryReader::read_u16(reader)?;
         let value = BinaryReader::read_u16(reader)?;
 
@@ -25,9 +25,9 @@ impl Generator {
     pub(crate) fn read_from_chunk<R: Read>(
         reader: &mut R,
         size: usize,
-    ) -> Result<Vec<Generator>, SoundFontError> {
+    ) -> Result<Vec<Generator>, ParseError> {
         if size % 4 != 0 {
-            return Err(SoundFontError::InvalidGeneratorList);
+            return Err(ParseError::InvalidGeneratorList);
         }
 
         let count = size / 4 - 1;

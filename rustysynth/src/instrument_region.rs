@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::generator::Generator;
 use crate::generator_type::GeneratorType;
 use crate::loop_mode::LoopMode;
@@ -37,7 +37,7 @@ impl InstrumentRegion {
         global: &Zone,
         local: &Zone,
         samples: &[SampleHeader],
-    ) -> Result<Self, SoundFontError> {
+    ) -> Result<Self, ParseError> {
         let mut gs: [i16; GeneratorType::COUNT] = [0; GeneratorType::COUNT];
         gs[GeneratorType::INITIAL_FILTER_CUTOFF_FREQUENCY as usize] = 13500;
         gs[GeneratorType::DELAY_MODULATION_LFO as usize] = -12000;
@@ -69,7 +69,7 @@ impl InstrumentRegion {
 
         let sample_id = gs[GeneratorType::SAMPLE_ID as usize] as usize;
         if sample_id >= samples.len() {
-            return Err(SoundFontError::InvalidSampleId {
+            return Err(ParseError::InvalidSampleId {
                 instrument_id,
                 sample_id,
             });
@@ -92,7 +92,7 @@ impl InstrumentRegion {
         instrument_id: usize,
         zones: &[Zone],
         samples: &[SampleHeader],
-    ) -> Result<Vec<InstrumentRegion>, SoundFontError> {
+    ) -> Result<Vec<InstrumentRegion>, ParseError> {
         // Is the first one the global zone?
         if zones[0].generators.is_empty()
             || zones[0].generators.last().unwrap().generator_type != GeneratorType::SAMPLE_ID

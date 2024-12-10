@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 
+use rustysynth::ParseError;
 use rustysynth::SoundFont;
-use rustysynth::SoundFontError;
 use std::fs::File;
 use std::path::PathBuf;
 
@@ -15,7 +15,7 @@ fn soundfont3_load_test() {
     match result {
         Ok(_) => assert!(false),
         Err(err) => match err {
-            SoundFontError::UnsupportedSampleFormat => return,
+            ParseError::UnsupportedSampleFormat => return,
             _ => assert!(false),
         },
     }

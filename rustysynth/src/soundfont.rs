@@ -4,7 +4,7 @@ use std::io::Read;
 use std::sync::Arc;
 
 use crate::binary_reader::BinaryReader;
-use crate::error::SoundFontError;
+use crate::error::ParseError;
 use crate::four_cc::FourCC;
 use crate::instrument::Instrument;
 use crate::preset::Preset;
@@ -30,17 +30,17 @@ impl SoundFont {
     /// # Arguments
     ///
     /// * `reader` - The data stream used to load the SoundFont.
-    pub fn new<R: Read>(reader: &mut R) -> Result<Self, SoundFontError> {
+    pub fn new<R: Read>(reader: &mut R) -> Result<Self, ParseError> {
         let chunk_id = BinaryReader::read_four_cc(reader)?;
         if chunk_id != b"RIFF" {
-            return Err(SoundFontError::RiffChunkNotFound);
+            return Err(ParseError::RiffChunkNotFound);
         }
 
         let _size = BinaryReader::read_i32(reader);
 
         let form_type = BinaryReader::read_four_cc(reader)?;
         if form_type != b"sfbk" {
-            return Err(SoundFontError::InvalidRiffChunkType {
+            return Err(ParseError::InvalidRiffChunkType {
                 expected: FourCC::from_bytes(*b"sfbk"),
                 actual: form_type,
             });
@@ -94,7 +94,7 @@ impl SoundFont {
         &self.instruments[..]
     }
 
-    fn sanitize(&mut self) -> Result<(), SoundFontError> {
+    fn sanitize(&mut self) -> Result<(), ParseError> {
         for instrument in self.instruments.iter_mut() {
             for region in instrument.regions.iter_mut() {
                 // https://github.com/sinshu/rustysynth/issues/22

@@ -302,4 +302,8 @@ impl PresetRegion {
     pub fn get_instrument_id(&self) -> usize {
         self.instrument
     }
+
+    pub fn get_generators(&self) -> &[i16; GeneratorType::COUNT] {
+        &self.gs
+    }
 }

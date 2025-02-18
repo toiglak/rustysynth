@@ -399,4 +399,8 @@ impl InstrumentRegion {
     pub fn get_sample_id(&self) -> usize {
         self.gs[GeneratorType::SAMPLE_ID as usize] as usize
     }
+
+    pub fn get_generators(&self) -> &[i16; GeneratorType::COUNT] {
+        &self.gs
+    }
 }
